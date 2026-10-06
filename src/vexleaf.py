@@ -1,6 +1,6 @@
 import sys
 import re
-# src/vexleaf.py starter.vexleaf
+# src/vexleaf.py starter.vexleafg
 class Token():
     def __init__(self, type, lexeme,val=None,errors=None):
         self.__type=type
@@ -39,10 +39,10 @@ def scanner(source_code):
     is_group=is_string
     for i in source_code:
         if is_group and not is_comment:
-            if (i == ']' or i==')') and not is_comment:
+            if i == ']' or i==')':
                 is_group=False
                 buffer.append(i)
-                token_list.append(Token('group',''.join(buffer),''.join(buffer),line_num))
+                token_list.append(Token('group'.upper(),''.join(buffer),''.join(buffer),line_num))
                 buffer=[]
                 continue
             if i=='\n':
@@ -61,21 +61,22 @@ def scanner(source_code):
             continue
         elif re.search(r"\s?[A-Za-z_]{1}\w*\W", "".join(buffer)+i):
             token_list.append(Token("Identifier".upper(), "".join(buffer), None, f"Line {line_num}"))
-            buffer = []
+
         elif re.search(r"\s?[0-9]+\W]", "".join(buffer)+i):
             token_list.append(Token('int_num'.upper(), "".join(buffer), "".join(buffer), f"Line {line_num}"))
-            buffer = []
+
         elif re.search(r"\s?[0-9]+(\.\d+)\W]", "".join(buffer)+i):
             token_list.append(
                 Token('float_num'.upper(), "".join(buffer), "".join(buffer), f"Line {line_num}"))
-            buffer = []
+
         if i == '\n':
-            token_list.append(i)
-            buffer = []
+            token_list.append(Token(i,i,None,line_num))
+            if not (is_group or is_string):
+                buffer = []
             line_num += 1
             is_comment = False
         elif i==';' or i=="{" or i=="}":
-            token_list.append(i)
+            token_list.append(Token(i,i,None,line_num))
             buffer=[]
         elif i==" " or i=='\t':
             continue
@@ -94,13 +95,13 @@ def scanner(source_code):
             else:
                 token_list.append(Token(f'{i}', f"{i}", None, f"line {line_num}"))
             buffer=[]
-        elif i =='[' or i=='(':
+        elif i =='[' or i=='(' and not is_group:
             buffer=[]
             is_group=9>0
             buffer.append(i)
             open_line = line_num
-        elif i=="\"" or i=="\'":
-            if (i =="\"" and i+1=="'") or (i+1 =="\"" and i=="'"):
+        elif i=="\"" or i=="\'" and not is_string:
+            if (i =="\"" and i+1=="''") or (i+1 =="\"" and i=="\'"):
                 is_comment=True
                 continue
             is_string=True
@@ -113,7 +114,26 @@ def scanner(source_code):
     if is_group or is_string:
         return f"Lexeme error: Failure to close string or group at line {open_line}."
     return token_list
+def parser(expression):
 
+    for i in range(len(expression)):
+        equal_index=None
+        if re.search(r"={1,2}|!=",expression[i].type):
+            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]),expression[i],parser(expression[i:])]
+
+        if re.search(r"[><]=?",expression[i].type):
+            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]),expression[i],parser(expression[i+1:])]
+        if re.search(r"[\+|\-]",expression[i].type):
+            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
+        if re.search(r"[\*\/]",expression[i].type):
+            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
+        if re.search(r"\*{2}",expression[i].type):
+            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
 
 
 
@@ -126,10 +146,13 @@ if __name__=='__main__':
         while True:
             try:
                 in_file=open(input(),'r')
-                scanner(in_file)
+                source_tokens=scanner(in_file)
+
+
 
             except:
                 print("No file detected.")
+
 
 
 
