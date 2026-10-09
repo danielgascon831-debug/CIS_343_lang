@@ -1,0 +1,10 @@
+Name: Vexleaf
+INT_NUM=r"\s?[0-9]+\W]"
+FLOAT_NUM=r"\s?[0-9]+(\.\d+)\W]"
+STRING=r{\"\'}{^\"\'}*{\"\'}
+IDENTIFIER=r"\s?[A-Za-z_]{1}\w*\W"
+ keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
+                'float', 'list', 'Block', 'list', 'array', 'inherits','break','continue']
+    operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=" '+', '-', "*", "/", "**", '++', '--', '.',
+                 '+=','-=','*=','/=']
+    boolean_words=['and','or','True','False'] 

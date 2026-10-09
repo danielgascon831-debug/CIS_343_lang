@@ -22,6 +22,8 @@ class Token():
     @property
     def errors(self):
         return self.__errors
+    def __str__(self):
+        return self.val
 
 def scanner(source_code):
     keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
@@ -121,19 +123,25 @@ def parser(expression):
         if re.search(r"={1,2}|!=",expression[i].type):
             print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
             return [parser(expression[:i]),expression[i],parser(expression[i:])]
-
+        if re.search(r"(AND)|(OR)",expression[i].type):
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
         if re.search(r"[><]=?",expression[i].type):
-            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
             return [parser(expression[:i]),expression[i],parser(expression[i+1:])]
         if re.search(r"[\+|\-]",expression[i].type):
-            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
             return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
         if re.search(r"[\*\/]",expression[i].type):
-            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
             return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
         if re.search(r"\*{2}",expression[i].type):
-            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
             return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
+        if expression[i].type=="group".upper():
+            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
+            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
+    return expression
 
 
 
