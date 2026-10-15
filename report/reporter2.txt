@@ -1,0 +1,3 @@
+For this parser and AST printer, I have made essentially a tree with 3 parts.
+The decisions then go based on the reverse order of operations, AKA the opposite of PEMDAS, comparators, gates, then equality.
+It goes by the expression before the operator, the operator, then the expression after the operator with each being parsed.

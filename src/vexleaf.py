@@ -116,31 +116,32 @@ def scanner(source_code):
     if is_group or is_string:
         return f"Lexeme error: Failure to close string or group at line {open_line}."
     return token_list
+def find_break(expression,pattern):
+    breaker=-1
+    for i in expression:
+        breaker+=1
+        if re.search(pattern, i.type):
+            return breaker
 def parser(expression):
+    if [x for x in expression if re.search(r"(={1,2})|(!=)",x.type)]:
+        selection=find_break(expression,r"(={1,2})|(!=)")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
+    if [x for x in expression if re.search(r"[><]=?",x.type)]:
+        selection=find_break(expression,r"[><]=?")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
+    if [x for x in expression if re.search(r"[\+|\-]",x.type)]:
+        selection=find_break(expression,r"[\+|\-]")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
+    if [x for x in expression if re.search(r"[\*\/]",x.type)]:
+        selection=find_break(expression,r"[><]=?")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
+    if [x for x in expression if re.search(r"\*{2}",x.type)]:
+        selection=find_break(expression,r"\*{2}")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
+    if [x for x in expression if re.search(r"(GROUP)",x.type)]:
+        selection=find_break(expression,r"(GROUP)")
+        return [expression[:selection],expression[selection],expression[selection+1:]]
 
-    for i in range(len(expression)):
-        equal_index=None
-        if re.search(r"={1,2}|!=",expression[i].type):
-            print(f"{expression[i].type}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]),expression[i],parser(expression[i:])]
-        if re.search(r"(AND)|(OR)",expression[i].type):
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
-        if re.search(r"[><]=?",expression[i].type):
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]),expression[i],parser(expression[i+1:])]
-        if re.search(r"[\+|\-]",expression[i].type):
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
-        if re.search(r"[\*\/]",expression[i].type):
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
-        if re.search(r"\*{2}",expression[i].type):
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
-        if expression[i].type=="group".upper():
-            print(f"{expression[i]}({parser(expression[:i])}) ({parser(expression[i:])})")
-            return [parser(expression[:i]), expression[i], parser(expression[i + 1:])]
     return expression
 
 

@@ -1,0 +1,4 @@
+For the order of operations, the parse is done reverse of order of operations.
+The order at the end for the left right root order is the following.
+pharentisis, exponents, multiplecation/division,addition/subtraction,comparision, equality
+
