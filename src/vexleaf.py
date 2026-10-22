@@ -28,15 +28,13 @@ def DFA(buffer,line_num=0,next_char=""):
     is_string=False
     keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
                 'float', 'list', 'Block', 'list', 'array', 'inherits', 'break', 'continue']
-    operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=", '+', '-', "*", "/", "**", '++', '--', '.',
+    operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=", '+', '-', "*", "/", "**", '++', '--','.',
                  '+=', '-=', '*=', '/=', ";","{","}",","]
     boolean_words = ['and', 'or', 'True', 'False']
     if re.fullmatch(r'\"[^"]*\"',buffer):
         return Token("string".upper(),buffer,buffer,line_num)
-    if re.fullmatch(r"\"[^\"]*[^\"]",buffer):
+    if re.fullmatch(r"\"[^\"]*",buffer):
         return
-    if buffer in keywords or buffer in boolean_words:
-        return Token(buffer,buffer,None,line_num)
     if buffer in operators:
         if re.fullmatch(r"[<>=+\-*/!][+\-*=]",buffer+next_char):
             return Token(buffer+next_char,buffer+next_char,None,line_num)
@@ -49,7 +47,7 @@ def DFA(buffer,line_num=0,next_char=""):
         return Token(buffer,buffer,None,line_num)
     if buffer=="]":
         return Token(buffer,buffer,None,line_num)
-    if re.fullmatch(r"\d*\.\d+\D",buffer+next_char):
+    if re.fullmatch(r"\d+\.\d+\D",buffer+next_char):
         return Token('float'.upper(),buffer,float(buffer),line_num)
     if re.fullmatch(r"\d+[^\d.]",buffer+next_char):
         return Token('int'.upper(),buffer,int(buffer),line_num)
@@ -82,8 +80,11 @@ def scanner(source_code):
                 is_comment=False
                 start_cursor=i+1
                 continue
+            if re.search(r"\s",buffer) and not(re.fullmatch(r"\"[^\"]*",buffer)):
+                start_cursor=i+1
+                continue
             if not is_comment:
-                next_char = source_code[i + 1] if i + 1 < len(source_code) else ""
+                next_char = source_code[i + 1] if i + 1 < len(source_code) else " "
                 token_state = DFA(buffer, line_num, next_char)
                 if type(token_state)==Token:
                     token_list.append(token_state)
