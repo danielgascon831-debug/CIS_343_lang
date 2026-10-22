@@ -1,6 +1,6 @@
 import sys
 import re
-# src/vexleaf.py starter.vexleafg
+# src/vexleaf.py starter.vexleaf
 class Token():
     def __init__(self, type, lexeme,val=None,errors=None):
         self.__type=type
@@ -24,98 +24,85 @@ class Token():
         return self.__errors
     def __str__(self):
         return self.val
+def DFA(buffer,line_num=0,next_char=""):
+    is_string=False
+    keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
+                'float', 'list', 'Block', 'list', 'array', 'inherits', 'break', 'continue']
+    operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=", '+', '-', "*", "/", "**", '++', '--', '.',
+                 '+=', '-=', '*=', '/=', ";","{","}",","]
+    boolean_words = ['and', 'or', 'True', 'False']
+    if re.fullmatch(r'\"[^"]*\"',buffer):
+        return Token("string".upper(),buffer,buffer,line_num)
+    if re.fullmatch(r"\"[^\"]*[^\"]",buffer):
+        return
+    if buffer in keywords or buffer in boolean_words:
+        return Token(buffer,buffer,None,line_num)
+    if buffer in operators:
+        if re.fullmatch(r"[<>=+\-*/!][+\-*=]",buffer+next_char):
+            return Token(buffer+next_char,buffer+next_char,None,line_num)
+        return Token(buffer,buffer,None,line_num)
+    if buffer=="(":
+        return Token(buffer,buffer,None,line_num)
+    if buffer==")":
+        return Token(buffer,buffer,None,line_num)
+    if buffer=="[":
+        return Token(buffer,buffer,None,line_num)
+    if buffer=="]":
+        return Token(buffer,buffer,None,line_num)
+    if re.fullmatch(r"\d*\.\d+\D",buffer+next_char):
+        return Token('float'.upper(),buffer,float(buffer),line_num)
+    if re.fullmatch(r"\d+[^\d.]",buffer+next_char):
+        return Token('int'.upper(),buffer,int(buffer),line_num)
+    if re.fullmatch(r"[_A-Za-z]\w*\W",buffer+next_char):
+        if buffer in keywords or buffer in boolean_words:
+            return Token(buffer, buffer, None, line_num)
+        return Token('identifier'.upper(), buffer,buffer, line_num)
+    return None
+
+
+
+
+
 
 def scanner(source_code):
-    keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
-                'float', 'list', 'Block', 'list', 'array', 'inherits','break','continue']
-    operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=" '+', '-', "*", "/", "**", '++', '--', '.',
-                 '+=','-=','*=','/=']
-    boolean_words=['and','or','True','False']
-    line_num=1
-    open_line=line_num
-    token_list=[]
-    buffer = []
-    is_comment=False
-    skip_over=False
-    is_string=is_comment
-    is_group=is_string
-    for i in source_code:
-        if is_group and not is_comment:
-            if i == ']' or i==')':
-                is_group=False
-                buffer.append(i)
-                token_list.append(Token('group'.upper(),''.join(buffer),''.join(buffer),line_num))
-                buffer=[]
+    line_num = 0
+    try:
+        token_list=[]
+        is_comment=False
+        start_cursor=0
+        buffer=""
+        for i in range(len(source_code)):
+            buffer=source_code[start_cursor:i+1]
+            if "\'\'\'" in buffer:
+                is_comment=not(is_comment)
+                start_cursor=i+1
                 continue
-            if i=='\n':
-               line_num+=1
-        elif is_string and not is_comment:
-            if i == "\"" or i == '\'':
-                is_string = False
-                buffer.append(i)
-                token_list.append(Token("Stringlit".upper(), ''.join(buffer), ''.join(buffer), line_num))
-                buffer = []
+            if source_code[i]=="\n":
+                line_num+=1
+                is_comment=False
+                start_cursor=i+1
                 continue
+            if not is_comment:
+                next_char = source_code[i + 1] if i + 1 < len(source_code) else ""
+                token_state = DFA(buffer, line_num, next_char)
+                if type(token_state)==Token:
+                    token_list.append(token_state)
+                    start_cursor=i+1+bool(re.fullmatch(r"[<>=+\-*/!][+\-*=]",token_state.type))
+                    continue
+        if re.fullmatch(r"\"[^\"]*[^\"]",buffer):
+            return f"String from line {line_num} is {'not'.upper()} complete."
+
+        return token_list
+
+    except:
+        return f"A lexeme error occured at line {line_num}."
 
 
-        elif (is_comment and i!='\n') or skip_over:
-            skip_over=99>996
-            continue
-        elif re.search(r"\s?[A-Za-z_]{1}\w*\W", "".join(buffer)+i):
-            token_list.append(Token("Identifier".upper(), "".join(buffer), None, f"Line {line_num}"))
 
-        elif re.search(r"\s?[0-9]+\W]", "".join(buffer)+i):
-            token_list.append(Token('int_num'.upper(), "".join(buffer), "".join(buffer), f"Line {line_num}"))
 
-        elif re.search(r"\s?[0-9]+(\.\d+)\W]", "".join(buffer)+i):
-            token_list.append(
-                Token('float_num'.upper(), "".join(buffer), "".join(buffer), f"Line {line_num}"))
 
-        if i == '\n':
-            token_list.append(Token(i,i,None,line_num))
-            if not (is_group or is_string):
-                buffer = []
-            line_num += 1
-            is_comment = False
-        elif i==';' or i=="{" or i=="}":
-            token_list.append(Token(i,i,None,line_num))
-            buffer=[]
-        elif i==" " or i=='\t':
-            continue
-        elif "".join(buffer) in keywords or "".join(buffer) in boolean_words:
 
-            keyword="".join(buffer)
-            token_list.append(Token(keyword.upper(),keyword,None,f"line {line_num}"))
-            buffer=[]
-        elif i in operators:
-            if type(i+1)!=None and i+1=='=':
-                token_list.append(Token(f'{i}=',f"{i}=",None,f"line {line_num}"))
-                skip_over=True
-            elif type(i+1)!=None and i in ['+','-','*'] and i==i+1:
-                token_list.append(Token(f'{i}{i}', f"{i}{i}", None, f"line {line_num}"))
-                skip_over = True
-            else:
-                token_list.append(Token(f'{i}', f"{i}", None, f"line {line_num}"))
-            buffer=[]
-        elif i =='[' or i=='(' and not is_group:
-            buffer=[]
-            is_group=9>0
-            buffer.append(i)
-            open_line = line_num
-        elif i=="\"" or i=="\'" and not is_string:
-            if (i =="\"" and i+1=="''") or (i+1 =="\"" and i=="\'"):
-                is_comment=True
-                continue
-            is_string=True
-            buffer=[]
-            buffer.append(i)
-            open_line = line_num
 
-        else:
-            buffer.append(i)
-    if is_group or is_string:
-        return f"Lexeme error: Failure to close string or group at line {open_line}."
-    return token_list
 def find_break(expression,pattern):
     breaker=-1
     for i in expression:
@@ -129,17 +116,14 @@ def parser(expression):
     if [x for x in expression if re.search(r"[><]=?",x.type)]:
         selection=find_break(expression,r"[><]=?")
         return [expression[:selection],expression[selection],expression[selection+1:]]
-    if [x for x in expression if re.search(r"[\+|\-]",x.type)]:
+    if [x for x in expression if re.search(r"[+|\-]",x.type)]:
         selection=find_break(expression,r"[\+|\-]")
         return [expression[:selection],expression[selection],expression[selection+1:]]
-    if [x for x in expression if re.search(r"[\*\/]",x.type)]:
+    if [x for x in expression if re.search(r"[*/]",x.type)]:
         selection=find_break(expression,r"[><]=?")
         return [expression[:selection],expression[selection],expression[selection+1:]]
     if [x for x in expression if re.search(r"\*{2}",x.type)]:
         selection=find_break(expression,r"\*{2}")
-        return [expression[:selection],expression[selection],expression[selection+1:]]
-    if [x for x in expression if re.search(r"(GROUP)",x.type)]:
-        selection=find_break(expression,r"(GROUP)")
         return [expression[:selection],expression[selection],expression[selection+1:]]
 
     return expression
@@ -153,14 +137,15 @@ if __name__=='__main__':
             print(code_input)
     elif len(sys.argv)==2:
         while True:
+
             try:
-                in_file=open(input(),'r')
-                source_tokens=scanner(in_file)
+                with open(sys.argv[1], "r", encoding="utf-8") as in_file:
+                    source_tokens = scanner(in_file.read())
 
 
 
             except:
-                print("No file detected.")
+                print("No file detected.") 
 
 
 
