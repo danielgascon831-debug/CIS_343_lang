@@ -26,7 +26,7 @@ class Token():
         return self.val
 def DFA(buffer,line_num=0,next_char=""):
     is_string=False
-    keywords = ["int", "if", 'else', 'return', 'while', 'for', 'string', 'class', 'import',
+    keywords = ["int", "if", 'else', 'return', 'while', 'print','for', 'string', 'class', 'import',
                 'float', 'list', 'Block', 'list', 'array', 'inherits', 'break', 'continue']
     operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=", '+', '-', "*", "/", "**", '++', '--','.',
                  '+=', '-=', '*=', '/=', ";","{","}",","]
@@ -80,7 +80,7 @@ def scanner(source_code):
                 is_comment=False
                 start_cursor=i+1
                 continue
-            if re.search(r"\s",buffer) and not(re.fullmatch(r"\"[^\"]*",buffer)):
+            if re.search(r"\s",source_code[i]) and not(re.fullmatch(r"\"[^\"]*",buffer)):
                 start_cursor=i+1
                 continue
             if not is_comment:
@@ -188,7 +188,8 @@ def parser(expression):
 
     # Parse from lowest precedence to highest.
     precedence = [
-        ("binary", r"(?:==|!=|=)", True),
+        ("binary",r"(=)",True),
+        ("binary", r"(?:==|!=)", True),
         ("binary", r"or", True),
         ("binary", r"and", True),
         ("binary", r"[><]=?", True),
@@ -222,9 +223,6 @@ def parser(expression):
 def evaluation(parse_tree):
     if len(parse_tree)==3:
         operator=parse_tree[1]
-        if operator=="=":
-            parse_tree[0].val=parse_tree[2]
-            return parse_tree[0].val
         if operator.type=="+":
             return parse_tree[0]+parse_tree[2]
         if operator.type=="-":
@@ -249,6 +247,10 @@ def evaluation(parse_tree):
         if operator=="-":
             return -1 * parse_tree[1]
     return parse_tree
+def print_run(statement):
+    print("".join([i.val for i in statement if i.type in
+                   ["INT",'FLOAT','STRING']]))
+
 
 
 
@@ -263,6 +265,33 @@ if __name__=='__main__':
             try:
                 with open(sys.argv[1], "r", encoding="utf-8") as in_file:
                     source_tokens = scanner(in_file.read())
+                    for i in range(len(source_tokens)):
+                        if source_tokens[i].type=='print':
+                            j=source_tokens[i]
+                            k=[j]
+                            while j.raw_input!=";":
+                                k.append(j)
+                                i+=1
+                                j = source_tokens[i]
+                            print_run(k)
+                            continue
+                        if source_tokens[i].type=="identiFier".upper():
+                            kki=source_tokens[i]
+                            if re.fullmatch('=',source_tokens[i+1].type):
+                                j = source_tokens[i]
+                                k = [j]
+                                while j.raw_input != ";":
+                                    k.append(j)
+                                    i += 1
+                                    j = source_tokens[i]
+                                kki.val=evaluation(parser(k))
+                                continue
+
+
+
+
+
+
 
 
 
