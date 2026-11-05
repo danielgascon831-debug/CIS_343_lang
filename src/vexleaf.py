@@ -224,28 +224,32 @@ def evaluation(parse_tree):
     if len(parse_tree)==3:
         operator=parse_tree[1]
         if operator.type=="+":
-            return parse_tree[0]+parse_tree[2]
+            return evaluation(parse_tree[0])+evaluation(parse_tree[2])
         if operator.type=="-":
-            return parse_tree[0]-parse_tree[2]
+            return evaluation(parse_tree[0])-evaluation(parse_tree[2])
         if operator.type=="*":
-            return parse_tree[0]*parse_tree[2]
+            return evaluation(parse_tree[0])*evaluation(parse_tree[2])
         if operator.type=="/":
-            return parse_tree[0]/parse_tree[2]
+            return evaluation(parse_tree[0])/evaluation(parse_tree[2])
         if operator.type=="**":
-            return parse_tree[0]**parse_tree[2]
+            return evaluation(parse_tree[0])**evaluation(parse_tree[2])
         if operator=="<=":
-            return parse_tree[0]<=parse_tree[2]
+            return evaluation(parse_tree[0])<=evaluation(parse_tree[2])
         if operator==">=":
-            return parse_tree[0]>=parse_tree[2]
+            return evaluation(parse_tree[0])>=evaluation(parse_tree[2])
+        if operator==">":
+            return evaluation(parse_tree[0])>evaluation(parse_tree[2])
+        if operator=="<":
+            return evaluation(parse_tree[0])<evaluation(parse_tree[2])
         if operator=="==":
-            return parse_tree[0]==parse_tree[2]
+            return evaluation(parse_tree[0])==evaluation(parse_tree[2])
 
     if len(parse_tree)==2:
         operator=parse_tree[0]
         if operator=="!":
-            return not([parse_tree[1]])
+            return not(evaluation([parse_tree[1]]))
         if operator=="-":
-            return -1 * parse_tree[1]
+            return -1 * evaluation(parse_tree[1])
     return parse_tree
 def print_run(statement):
     print("".join([i.val for i in statement if i.type in
