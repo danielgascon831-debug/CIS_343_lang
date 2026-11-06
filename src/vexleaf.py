@@ -221,8 +221,9 @@ def parser(expression):
     return expression
     #End AI patch of original parser submission.
 def evaluation(parse_tree):
-    if len(parse_tree)==3:
-        operator=parse_tree[1]
+    try:
+        if len(parse_tree)==3:
+            operator=parse_tree[1]
         if operator.type=="+":
             return evaluation(parse_tree[0])+evaluation(parse_tree[2])
         if operator.type=="-":
@@ -244,13 +245,16 @@ def evaluation(parse_tree):
         if operator=="==":
             return evaluation(parse_tree[0])==evaluation(parse_tree[2])
 
-    if len(parse_tree)==2:
-        operator=parse_tree[0]
-        if operator=="!":
-            return not(evaluation([parse_tree[1]]))
-        if operator=="-":
-            return -1 * evaluation(parse_tree[1])
-    return parse_tree
+        if len(parse_tree)==2:
+            operator=parse_tree[0]
+            if operator=="!":
+                return not(evaluation([parse_tree[1]]))
+            if operator=="-":
+                return -1 * evaluation(parse_tree[1])
+
+        return parse_tree
+    except:
+        return
 def print_run(statement):
     print("".join([i.val for i in statement if i.type in
                    ["INT",'FLOAT','STRING']]))
@@ -276,7 +280,13 @@ if __name__=='__main__':
                             while j.raw_input!=";":
                                 k.append(j)
                                 i+=1
+                                if i>= len(source_tokens):
+                                    print("Failed to close statment.")
+                                    exit()
                                 j = source_tokens[i]
+                                if j.type=='print':
+                                    k=[]
+                                    continue
                             print_run(k)
                             continue
                         if source_tokens[i].type=="identiFier".upper():
@@ -287,9 +297,13 @@ if __name__=='__main__':
                                 while j.raw_input != ";":
                                     k.append(j)
                                     i += 1
+                                    if i >= len(source_tokens):
+                                        print("Failed to close statment.")
+                                        exit()
                                     j = source_tokens[i]
                                 kki.val=evaluation(parser(k))
                                 continue
+
 
 
 

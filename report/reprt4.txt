@@ -1,0 +1,5 @@
+This is the report for lab 4. The parser and evaluator failure to do the recursion has been patched.
+For panic mode, if an error occurs, normal end of file error occurs if no semicolon. Furthermore, if print
+statement prematutrely says print again, then the previous print is ignored and the new statement starts.
+For the parse, it goes by identifier equalling an esxpression for the parser, and for now, I temporarily store that in
+the identifier itself.
