@@ -26,7 +26,7 @@ class Token():
         return self.val
 def DFA(buffer,line_num=0,next_char=""):
     is_string=False
-    keywords = ["int", "if", 'else', 'return', 'while', 'print','for', 'string', 'class', 'import',
+    keywords = ["int", "boolean", "if", 'else', 'return', 'while', 'print','for', 'string', 'class', 'import',
                 'float', 'list', 'Block', 'list', 'array', 'inherits', 'break', 'continue']
     operators = ['>=', '>', '=', '==', '<', '<=', "!", "!=", '+', '-', "*", "/", "**", '++', '--','.',
                  '+=', '-=', '*=', '/=', ";","{","}",","]
@@ -224,26 +224,26 @@ def evaluation(parse_tree):
     try:
         if len(parse_tree)==3:
             operator=parse_tree[1]
-        if operator.type=="+":
-            return evaluation(parse_tree[0])+evaluation(parse_tree[2])
-        if operator.type=="-":
-            return evaluation(parse_tree[0])-evaluation(parse_tree[2])
-        if operator.type=="*":
-            return evaluation(parse_tree[0])*evaluation(parse_tree[2])
-        if operator.type=="/":
-            return evaluation(parse_tree[0])/evaluation(parse_tree[2])
-        if operator.type=="**":
-            return evaluation(parse_tree[0])**evaluation(parse_tree[2])
-        if operator=="<=":
-            return evaluation(parse_tree[0])<=evaluation(parse_tree[2])
-        if operator==">=":
-            return evaluation(parse_tree[0])>=evaluation(parse_tree[2])
-        if operator==">":
-            return evaluation(parse_tree[0])>evaluation(parse_tree[2])
-        if operator=="<":
-            return evaluation(parse_tree[0])<evaluation(parse_tree[2])
-        if operator=="==":
-            return evaluation(parse_tree[0])==evaluation(parse_tree[2])
+            if operator.type=="+":
+                return evaluation(parse_tree[0])+evaluation(parse_tree[2])
+            if operator.type=="-":
+                return evaluation(parse_tree[0])-evaluation(parse_tree[2])
+            if operator.type=="*":
+                return evaluation(parse_tree[0])*evaluation(parse_tree[2])
+            if operator.type=="/":
+                return evaluation(parse_tree[0])/evaluation(parse_tree[2])
+            if operator.type=="**":
+                return evaluation(parse_tree[0])**evaluation(parse_tree[2])
+            if operator=="<=":
+                return evaluation(parse_tree[0])<=evaluation(parse_tree[2])
+            if operator==">=":
+                return evaluation(parse_tree[0])>=evaluation(parse_tree[2])
+            if operator==">":
+                return evaluation(parse_tree[0])>evaluation(parse_tree[2])
+            if operator=="<":
+                return evaluation(parse_tree[0])<evaluation(parse_tree[2])
+            if operator=="==":
+                return evaluation(parse_tree[0])==evaluation(parse_tree[2])
 
         if len(parse_tree)==2:
             operator=parse_tree[0]
@@ -258,6 +258,39 @@ def evaluation(parse_tree):
 def print_run(statement):
     print("".join([i.val for i in statement if i.type in
                    ["INT",'FLOAT','STRING']]))
+class Var_Stack:
+    def __init__(self):
+        self.__float_var_stack=[{}]
+        self.__int_var_stack=[{}]
+        self.__string_var_stack=[{}]
+
+
+    def push(self):
+       self.__int_var_stack.append({})
+       self.__float_var_stack.append({})
+       self.__string_var_stack.append({})
+    def assign(self,name,val=None,type=0):
+        if type==2:
+            if val==None or not(re.fullmatch(r"\"[^\"]*",val)):
+                val=""
+            self.__string_var_stack[-1][name]=val
+            return
+        if type==1:
+            if val == None or not (re.fullmatch(r"d+\.d+", val)):
+                val = 0.0
+            self.__float_var_stack[-1][name] = val
+            return
+        if val == None or not (re.fullmatch(r"d+", val)):
+            val = 0
+        self.__int_var_stack[-1][name] = val
+
+    def is_empty(self):
+        pass
+
+    def pop(self):
+        return [self.__string_var_stack.pop(),
+                self.__float_var_stack.pop(),
+                self.__int_var_stack.pop()]
 
 
 
@@ -276,7 +309,7 @@ if __name__=='__main__':
                     for i in range(len(source_tokens)):
                         if source_tokens[i].type=='print':
                             j=source_tokens[i]
-                            k=[j]
+                            k=[]
                             while j.raw_input!=";":
                                 k.append(j)
                                 i+=1
@@ -287,22 +320,14 @@ if __name__=='__main__':
                                 if j.type=='print':
                                     k=[]
                                     continue
+
                             print_run(k)
                             continue
-                        if source_tokens[i].type=="identiFier".upper():
-                            kki=source_tokens[i]
-                            if re.fullmatch('=',source_tokens[i+1].type):
-                                j = source_tokens[i]
-                                k = [j]
-                                while j.raw_input != ";":
-                                    k.append(j)
-                                    i += 1
-                                    if i >= len(source_tokens):
-                                        print("Failed to close statment.")
-                                        exit()
-                                    j = source_tokens[i]
-                                kki.val=evaluation(parser(k))
-                                continue
+                        if source_tokens[i].type=="identifier".upper():
+                            j = source_tokens[i]
+                            k = []
+
+
 
 
 
