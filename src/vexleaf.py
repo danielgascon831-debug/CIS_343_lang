@@ -52,8 +52,10 @@ def DFA(buffer,line_num=0,next_char=""):
     if re.fullmatch(r"\d+[^\d.]",buffer+next_char):
         return Token('int'.upper(),buffer,int(buffer),line_num)
     if re.fullmatch(r"[_A-Za-z]\w*\W",buffer+next_char):
-        if buffer in keywords or buffer in boolean_words:
+        if buffer in keywords:
             return Token(buffer, buffer, None, line_num)
+        if buffer in boolean_words:
+            return Token("Boolean",buffer,buffer==True,line_num)
         return Token('identifier'.upper(), buffer,buffer, line_num)
     return None
 
@@ -263,34 +265,64 @@ class Var_Stack:
         self.__float_var_stack=[{}]
         self.__int_var_stack=[{}]
         self.__string_var_stack=[{}]
-
+        self.__bool_var_stack=[{}]
+        self.__var_list=[ self.__int_var_stack, self.__bool_var_stack,self.__float_var_stack,self.__string_var_stack]
 
     def push(self):
        self.__int_var_stack.append({})
        self.__float_var_stack.append({})
        self.__string_var_stack.append({})
-    def assign(self,name,val=None,type=0):
-        if type==2:
+       self.__bool_var_stack.append({})
+    def declare(self,name,type=0,val=None):
+        for i in self.__var_list:
+            #redeclareation pops for current block
+
+            i[-1].pop(name,"")
+
+        if type==3:#String
             if val==None or not(re.fullmatch(r"\"[^\"]*",val)):
                 val=""
-            self.__string_var_stack[-1][name]=val
+            self.__string_var_stack[-1][name]=f"{val}"
             return
-        if type==1:
+        if type==2:#float
             if val == None or not (re.fullmatch(r"d+\.d+", val)):
                 val = 0.0
-            self.__float_var_stack[-1][name] = val
+            self.__float_var_stack[-1][name] = float(val)
+            return
+        if type==1:#bool
+
+            self.__float_var_stack[-1][name] = bool(val)
             return
         if val == None or not (re.fullmatch(r"d+", val)):
             val = 0
-        self.__int_var_stack[-1][name] = val
+        self.__int_var_stack[-1][name] = int(val)
 
     def is_empty(self):
-        pass
+       exit()
 
     def pop(self):
         return [self.__string_var_stack.pop(),
                 self.__float_var_stack.pop(),
                 self.__int_var_stack.pop()]
+    def access(self,name):
+        for i in self.__var_list:
+            for j in range(len(i)-1,-1,-1):
+                if name in i[j]:
+                    return i[j][name]
+        print("Within this stack of blocks,this variable has not been declared.")
+        exit()
+    def change(self,name,new_val,type=0):
+        for i in range(len(self.__var_list[type])-1,-1,-1):
+            if name in self.__var_list[type][i]:
+                self.__var_list[type][i][name]=new_val
+                return 0
+
+        print("Within this stack of blocks,this variable has not been declared.")
+        exit()
+
+
+
+
 
 
 
