@@ -160,8 +160,9 @@ def find_break(expression, pattern, rightmost=True):
 
     return matches[-1] if rightmost else matches[0]
 #end AI patch
-def parser(expression):
-
+def parser(expression,var_stack=0):
+    if type(var_stack)!=Var_Stack:
+        var_stack=Var_Stack()
     def has_outer_parentheses(expr):
         if (
             len(expr) < 2
@@ -205,6 +206,7 @@ def parser(expression):
 
         # Logical negation binds tightly.
         ("prefix", r"!", False),
+        ('identifier',f"Identifier".upper(),False)
     ]
 
     for kind, pattern, rightmost in precedence:
@@ -214,12 +216,14 @@ def parser(expression):
 
             if selection is not None:
                 return [parser(expression[:selection]),expression[selection],parser(expression[selection + 1:]) ]
+        elif expression and re.fullmatch(pattern,expression[0].type) and kind=='identifier':
+            #Returns value of identifier to parent parser.
+            return var_stack.access(expression[0].type)
 
         elif expression and re.fullmatch(pattern, expression[0].type):
             # Unary node: [operator, operand]
             return [expression[0],parser(expression[1:])]
-
-    # Base case: a literal, identifier, or other single token.
+    # Base case: a literal or other single token.
     return expression
     #End AI patch of original parser submission.
 def evaluation(parse_tree):
@@ -300,7 +304,7 @@ class Var_Stack:
     def is_empty(self):
        exit()
 
-    def pop(self):
+    def pull(self):
         return [self.__string_var_stack.pop(),
                 self.__float_var_stack.pop(),
                 self.__int_var_stack.pop()]
@@ -309,7 +313,7 @@ class Var_Stack:
             for j in range(len(i)-1,-1,-1):
                 if name in i[j]:
                     return i[j][name]
-        print("Within this stack of blocks,this variable has not been declared.")
+        print(f"Within this stack of blocks, variable {name} has not been declared.")
         exit()
     def change(self,name,new_val,type=0):
         for i in range(len(self.__var_list[type])-1,-1,-1):
@@ -317,7 +321,7 @@ class Var_Stack:
                 self.__var_list[type][i][name]=new_val
                 return 0
 
-        print("Within this stack of blocks,this variable has not been declared.")
+        print(f"Within this stack of blocks, variable {name} has not been declared.")
         exit()
 
 
@@ -338,6 +342,7 @@ if __name__=='__main__':
             try:
                 with open(sys.argv[1], "r", encoding="utf-8") as in_file:
                     source_tokens = scanner(in_file.read())
+                    var_hold=Var_Stack()
                     for i in range(len(source_tokens)):
                         if source_tokens[i].type=='print':
                             j=source_tokens[i]
