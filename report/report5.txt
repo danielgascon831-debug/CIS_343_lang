@@ -1,0 +1,14 @@
+Expected output:
+inner a
+outer b
+global c
+outer a
+outer b
+global c
+global a
+global b
+global c
+This is because in the given test, it starts with the global variables,
+then goes with the block stack push when a new block starts, then has access based on it going by
+the corresponding type in the current block, followed by the parents if not there before werror is declared.
+Upon leaving a block, a pull occurs as it returns to the previous block.
